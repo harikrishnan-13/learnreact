@@ -4,6 +4,7 @@ import Header from "./Header";
 import Footer from "./Footer";
 import AddItem from "./AddItem";
 import SearchItem from "./SearchItem";
+import { v4 as uuidv4 } from 'uuid';
 
 function App() {
   const API_URL = "http://localhost:8000/items";
@@ -35,21 +36,42 @@ function App() {
 
   }, []);
 
-  const handleChange = (id) => {
+  const handleChange = async (id) => {
     const listItems = items.map((item) =>
       item.id === id ? { ...item, checked: !item.checked } : item)
     setItems(listItems);
-    localStorage.setItem("todo_list", JSON.stringify(listItems))
+
+    const myItem = listItems.filter((item) => item.id === id);
+
+    try {
+      await fetch(`${API_URL}/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ checked: myItem[0].checked })
+      });
+    } catch (error) {
+      console.error("Error adding item:", error);
+    }
   }
 
-  const handledelete = (id) => {
+  const handledelete = async (id) => {
     const updatedItems = items.filter((item) => item.id !== id);
     setItems(updatedItems);
+
+    try {
+      await fetch(`${API_URL}/${id}`, {
+        method: "DELETE"
+      });
+    } catch (error) {
+      console.error("Error adding item:", error);
+    }
   }
 
   const handleAddItem = async (newItemText) => {
     const newItem = {
-      id: items.length + 1,
+      id: uuidv4(),
       checked: false,
       item: newItemText
     };
@@ -63,7 +85,7 @@ function App() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(newItem),
+        body: JSON.stringify(newItem)
       });
     } catch (error) {
       console.error("Error adding item:", error);
